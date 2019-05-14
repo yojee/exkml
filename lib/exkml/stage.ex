@@ -5,7 +5,7 @@ defmodule Exkml.Stage do
     GenStage.start_link(__MODULE__, [binstream, chunk_size])
   end
 
-  def init([binstream, chunk_size]) do
+  def init([binstream, _chunk_size]) do
     ref = Exkml.events!(binstream)
     buf = []
     demand = 0
