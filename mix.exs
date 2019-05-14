@@ -38,8 +38,8 @@ defmodule Exkml.Mixfile do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev},
-      {:gen_stage, "~> 0.8.0"},
-      {:saxy, github: "qcam/saxy", tag: "43828ee5c8c16c96348d15fcded44162dbf20c13"}
+      {:gen_stage, "~> 0.14"},
+      {:saxy, "~> 0.9.1"}
     ]
   end
 end

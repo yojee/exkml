@@ -324,7 +324,6 @@ defmodule ExkmlTest do
     {"wards", [Polygon, Multigeometry], 53}
   ], fn {name, kinds, expected_length} ->
     test "smoke #{name}" do
-      alias Experimental.GenStage
       expected_set = MapSet.new(unquote(kinds))
 
       "smoke/#{unquote(name)}"
