@@ -26,7 +26,7 @@ defmodule Exkml do
 
   defp do_str_to_point([x, y]) do
     with {x, _} <- Float.parse(x),
-      {y, _} <- Float.parse(y) do
+         {y, _} <- Float.parse(y) do
       {:ok, %Point{x: x, y: y}}
     else
       _ -> :error
@@ -35,8 +35,8 @@ defmodule Exkml do
 
   defp do_str_to_point([x, y, z]) do
     with {x, _} <- Float.parse(x),
-      {y, _} <- Float.parse(y),
-      {z, _} <- Float.parse(z) do
+         {y, _} <- Float.parse(y),
+         {z, _} <- Float.parse(z) do
       {:ok, %Point{x: x, y: y, z: z}}
     else
       _ -> :error
@@ -45,7 +45,7 @@ defmodule Exkml do
 
   def str_to_point(point_str) do
     point_str
-    |> String.trim
+    |> String.trim()
     |> String.split(",")
     |> do_str_to_point
     |> case do
@@ -58,7 +58,10 @@ defmodule Exkml do
     line_str
     |> :binary.split([" ", "\n"], [:global])
     |> Enum.map(&String.trim/1)
-    |> extract_many(&str_to_point/1, fn "" -> false; _ -> true end)
+    |> extract_many(&str_to_point/1, fn
+      "" -> false
+      _ -> true
+    end)
     |> case do
       {:ok, points} -> {:ok, %Line{points: points}}
       err -> err
@@ -83,7 +86,6 @@ defmodule Exkml do
     end
   end
 
-
   defmodule State do
     defstruct [
       :receiver,
@@ -100,7 +102,7 @@ defmodule Exkml do
   end
 
   defmodule Placemark do
-    defstruct [attrs: %{}, geoms: []]
+    defstruct attrs: %{}, geoms: []
   end
 
   def put_attribute(%State{placemark: %Placemark{attrs: attrs} = pm} = s, name, value) do
@@ -118,15 +120,16 @@ defmodule Exkml do
       _ -> nil
     end)
     |> case do
-      nil -> nil
+      nil ->
+        nil
+
       chars ->
-        key   = String.trim(chars)
+        key = String.trim(chars)
         value = String.trim(value)
 
         {key, value}
     end
   end
-
 
   def push_event(%State{stack: stack, path: path} = state, {name, attributes}) do
     %State{state | stack: [name | stack], path: [{name, attributes} | path]}
@@ -149,11 +152,10 @@ defmodule Exkml do
   end
 
   def pop_geom(_state, kind) do
-    throw "Cannot pop #{kind}"
+    throw("Cannot pop #{kind}")
   end
 
   def pop_geom(state), do: pop_geom(state, nil)
-
 
   def put_in_placemark(%Placemark{geoms: geoms} = pm, geom) do
     %Placemark{pm | geoms: [geom | geoms]}
@@ -162,6 +164,7 @@ defmodule Exkml do
   defp merge_up(%Point{} = geom, %Placemark{} = p), do: put_in_placemark(p, geom)
   defp merge_up(%Line{} = geom, %Placemark{} = p), do: put_in_placemark(p, geom)
   defp merge_up(%Polygon{} = geom, %Placemark{} = p), do: put_in_placemark(p, geom)
+
   defp merge_up(%Multigeometry{} = mp, %Placemark{} = p) do
     put_in_placemark(p, %Multigeometry{geoms: Enum.reverse(mp.geoms)})
   end
@@ -179,7 +182,7 @@ defmodule Exkml do
   end
 
   defp merge_up(child, parent, _) do
-    throw "No merge_up impl #{inspect child} #{inspect parent}"
+    throw("No merge_up impl #{inspect(child)} #{inspect(parent)}")
   end
 
   def put_point(%State{} = state, text) do
@@ -210,41 +213,46 @@ defmodule Exkml do
     put_attribute(state, name, value)
   end
 
-  textof "Point/coordinates", state, do: put_point(state, text)
-  textof "MultiGeometry/Point/coordinates", state, do: put_point(state, text)
+  textof("Point/coordinates", state, do: put_point(state, text))
+  textof("MultiGeometry/Point/coordinates", state, do: put_point(state, text))
 
-  textof "LineString/coordinates", state, do: put_line(state, text)
-  textof "MultiGeometry/LineString/coordinates", state, do: put_line(state, text)
+  textof("LineString/coordinates", state, do: put_line(state, text))
+  textof("MultiGeometry/LineString/coordinates", state, do: put_line(state, text))
 
-  textof "Polygon/outerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text)
-  textof "Polygon/innerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text)
-  textof "MultiGeometry/Polygon/outerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text)
-  textof "MultiGeometry/Polygon/innerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text)
+  textof("Polygon/outerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text))
+  textof("Polygon/innerBoundaryIs/LinearRing/coordinates", state, do: put_line(state, text))
 
-  textof "name", state, do: put_attribute(state, "name", text)
-  textof "description", state, do: put_attribute(state, "description", text)
+  textof("MultiGeometry/Polygon/outerBoundaryIs/LinearRing/coordinates", state,
+    do: put_line(state, text)
+  )
 
-  textof "TimeSpan/begin", state, do: put_attribute(state, "timespan_begin", text)
-  textof "TimeSpan/end", state, do: put_attribute(state, "timespan_end", text)
+  textof("MultiGeometry/Polygon/innerBoundaryIs/LinearRing/coordinates", state,
+    do: put_line(state, text)
+  )
 
+  textof("name", state, do: put_attribute(state, "name", text))
+  textof("description", state, do: put_attribute(state, "description", text))
 
-  on_exit "Point", state,      do: state |> pop_geom |> pop_event
-  on_exit "LineString", state, do: state |> pop_geom |> pop_event
-  on_exit "Polygon", state,    do: state |> pop_geom |> pop_event
+  textof("TimeSpan/begin", state, do: put_attribute(state, "timespan_begin", text))
+  textof("TimeSpan/end", state, do: put_attribute(state, "timespan_end", text))
+
+  on_exit("Point", state, do: state |> pop_geom |> pop_event)
+  on_exit("LineString", state, do: state |> pop_geom |> pop_event)
+  on_exit("Polygon", state, do: state |> pop_geom |> pop_event)
 
   on_exit "LinearRing", state do
-    boundary_type = case state.path do
-      [_, {"innerBoundaryIs", _} | _] -> :inner_boundaries
-      [_, {"outerBoundaryIs", _} | _] -> :outer_boundary
-    end
+    boundary_type =
+      case state.path do
+        [_, {"innerBoundaryIs", _} | _] -> :inner_boundaries
+        [_, {"outerBoundaryIs", _} | _] -> :outer_boundary
+      end
 
     state
     |> pop_geom(boundary_type)
     |> pop_event
   end
 
-  on_exit "MultiGeometry", state, do: state |> pop_geom |> pop_event
-
+  on_exit("MultiGeometry", state, do: state |> pop_geom |> pop_event)
 
   on_enter "Polygon", event, %State{placemark: %Placemark{}} = state do
     state
@@ -257,7 +265,6 @@ defmodule Exkml do
     |> push_geom(%Multigeometry{})
     |> push_event(event)
   end
-
 
   # Push the element name onto the stack, as well as the attributes onto the path
   on_enter _name, event, %State{placemark: %Placemark{}} = state do
@@ -277,10 +284,14 @@ defmodule Exkml do
     %{emit(state) | stack: [], path: [], placemark: nil}
   end
 
-  on_enter "kml", _, state, do: %State{state | status: :kml}
-  on_exit  "kml", state, do: %State{state | status: :out_kml}
+  on_enter("kml", _, state, do: %State{state | status: :kml})
+  on_exit("kml", state, do: %State{state | status: :out_kml})
 
-  def handle_event(:end_document, _event, %State{status: :out_kml, receiver: r, receiver_ref: ref} = state) do
+  def handle_event(
+        :end_document,
+        _event,
+        %State{status: :out_kml, receiver: r, receiver_ref: ref} = state
+      ) do
     new_state = flush(state)
     send(r, {:done, ref})
     {:ok, new_state}
@@ -303,6 +314,7 @@ defmodule Exkml do
     receive do
       {:ack, ^ref} -> :ok
     end
+
     state
   end
 
@@ -310,12 +322,11 @@ defmodule Exkml do
     case %State{state | emit: [state.placemark | state.emit]} do
       %State{emit: emit} = new_state when length(emit) > batch_size ->
         new_state |> flush |> await_ack
+
       new_state ->
         new_state
     end
   end
-
-
 
   def stage(binstream, chunk_size \\ 4096) do
     Exkml.Stage.start_link(binstream, chunk_size)
@@ -334,8 +345,10 @@ defmodule Exkml do
           {:placemarks, ^ref, from, pms} ->
             ack(from, ref)
             {pms, state}
+
           {:done, ^ref} ->
             {:halt, state}
+
           {:error, ^ref, event} ->
             raise KMLParseError, message: "Document ended prematurely", event: event
         end
@@ -373,13 +386,16 @@ defmodule Exkml do
   def events!(binstream, _chunk_size \\ 4096) do
     me = self()
     ref = make_ref()
+
     spawn_link(fn ->
       Saxy.parse_stream(binstream, __MODULE__, %State{
         receiver: me,
         receiver_ref: ref
       })
       |> case do
-        {:ok, _} -> :ok
+        {:ok, _} ->
+          :ok
+
         {:error, event} ->
           send(me, {:error, ref, event})
       end
@@ -389,6 +405,5 @@ defmodule Exkml do
   end
 
   def ack(nil, _), do: :ok
-  def ack(from, ref), do: send from, {:ack, ref}
-
+  def ack(from, ref), do: send(from, {:ack, ref})
 end

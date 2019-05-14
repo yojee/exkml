@@ -16,9 +16,10 @@ defmodule Exkml.Helpers do
   end
 
   defmacro textof(path, state, body) do
-    stack = path
-    |> String.split("/")
-    |> Enum.reverse
+    stack =
+      path
+      |> String.split("/")
+      |> Enum.reverse()
 
     quote do
       def handle_event(:characters, c, %{stack: unquote(stack)} = unquote(state)) do
@@ -27,6 +28,4 @@ defmodule Exkml.Helpers do
       end
     end
   end
-
-
 end

@@ -48,6 +48,6 @@ defmodule Exkml.Stage do
     {:stop, :normal, state}
   end
 
-  defp maybe_end({:done, _, [], _, _}), do: send self(), :stop
+  defp maybe_end({:done, _, [], _, _}), do: send(self(), :stop)
   defp maybe_end(_), do: :nope
 end
