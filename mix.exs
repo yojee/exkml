@@ -38,8 +38,8 @@ defmodule Exkml.Mixfile do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev},
-      {:gen_stage, "~> 0.8.0"},
-      {:saxy, "~> 0.9.1"}
+      {:gen_stage, "~> 1.0"},
+      {:saxy, "~> 1.2"}
     ]
   end
 end

@@ -284,7 +284,7 @@ defmodule ExkmlTest do
           "a_float" => "2.2",
           "a_num" => "2",
           "a_string" => "first value",
-          "empty_test" => nil
+          "empty_test" => ""
         }
       },
       %Placemark{
@@ -349,7 +349,6 @@ defmodule ExkmlTest do
     {"wards", [Polygon, Multigeometry], 53}
   ], fn {name, kinds, expected_length} ->
     test "smoke #{name}" do
-      alias Experimental.GenStage
       expected_set = MapSet.new(unquote(kinds))
 
       "smoke/#{unquote(name)}"

@@ -1,5 +1,4 @@
 defmodule Exkml.Stage do
-  alias Experimental.GenStage
   use GenStage
 
   def start_link(binstream, chunk_size) do
